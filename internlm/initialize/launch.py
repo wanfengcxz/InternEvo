@@ -72,7 +72,7 @@ def args_sanity_check():
     # the default model type is INTERNLM
     if "model_type" not in gpc.config:
         gpc.config._add_item("model_type", ModelType.INTERNLM.name)
-
+    
     if "use_apex_adam" not in gpc.config:
         gpc.config._add_item("use_apex_adam", False)
 
@@ -405,9 +405,10 @@ def args_sanity_check():
         AcceleratorType.DIPU,
         AcceleratorType.DITORCH,
     ]:
-        assert (
-            gpc.config.data.use_packed_dataset is False
-        ), "only unpacked data is supported when tensor parallel mode is isp and accelerator type is NPU or DIPU"
+        # assert (
+        #     gpc.config.data.use_packed_dataset is False
+        # ), "only unpacked data is supported when tensor parallel mode is isp and accelerator type is NPU or DIPU"
+        pass
 
     if internlm_accelerator.get_accelerator_backend() in [
         AcceleratorType.NPU,
