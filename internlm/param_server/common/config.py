@@ -53,7 +53,7 @@ if model_type is None:
     sys.exit(1)
     
 MODEL_TYPE_LIST = ["INTERNLM_2_7B", "QWEN_2_7B", "LLAMA_2_7B"]
-assert model_type in MODEL_TYPE_LIST "error, model don't support!"
+assert model_type in MODEL_TYPE_LIST, "error, model don't support!"
 MODEL_PARAM_DICT = dict()
 
 MODEL_PARAM_DICT["LLAMA_2_7B"] = dict()
