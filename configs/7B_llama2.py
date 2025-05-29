@@ -1,3 +1,5 @@
+import os
+
 JOB_NAME = "7b_llama2_train"
 model_type = "LLAMA2"
 DO_ALERT = False
@@ -9,6 +11,7 @@ NUM_ATTENTION_HEAD = 32
 NUM_KV_ATTENTION_HEAD = 32
 MLP_RATIO = 2.6875
 NUM_LAYER = 32
+sync_step = 16
 
 
 MODEL_ONLY_FOLDER = "local:llm_ckpts/xxxx"
@@ -40,9 +43,10 @@ ckpt = dict(
     oss_snapshot_freq=int(CHECKPOINT_EVERY / 2),  # snapshot ckpt save frequency.
 )
 
-TRAIN_FOLDER = None
+TRAIN_FOLDER = "/data/datasets/TinyStories"
 VALID_FOLDER = None  # "/path/to/dataset"
 data = dict(
+    tokenizer_path="/data/deeplink_yidian/tokenizer/hf-llama2-tokenizer",
     seq_len=SEQ_LEN,
     # micro_num means the number of micro_batch contained in one gradient update
     micro_num=4,
@@ -53,7 +57,7 @@ data = dict(
     # defaults to 0, means disable evaluate
     valid_every=0,
     pack_sample_into_one=False,
-    total_steps=20,
+    total_steps=500,
     skip_batches="",
     # rampup_batch_size (str): A string with three space-separated integers representing the
     #       starting batch size, the increment, and the number of steps between
@@ -181,8 +185,8 @@ weight parallel (dict):
 """
 parallel = dict(
     zero1=dict(size=-1),
-    tensor=dict(size=1, mode="mtp"),
-    pipeline=dict(size=1, interleaved_overlap=True),
+    tensor=dict(size=2, mode="mtp"),
+    pipeline=dict(size=2, interleaved_overlap=True),
     weight=dict(size=1, overlap=True),
 )
 

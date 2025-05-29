@@ -1,3 +1,5 @@
+import os
+
 JOB_NAME = "7b_internlm2_train"
 model_type = "INTERNLM2"
 DO_ALERT = False
@@ -9,19 +11,15 @@ NUM_ATTENTION_HEAD = 32
 NUM_KV_ATTENTION_HEAD = 8
 MLP_RATIO = 3.5
 NUM_LAYER = 32
+sync_step = 16
 
 
+LOAD_CKPT_FOLDER = "local:llm_ckpts/49"
 MODEL_ONLY_FOLDER = "local:llm_ckpts/xxxx"
 # Ckpt folder format:
 # fs: 'local:/mnt/nfs/XXX'
 SAVE_CKPT_FOLDER = "local:llm_ckpts"
 LOAD_CKPT_FOLDER = "local:llm_ckpts/49"
-
-# boto3 Ckpt folder format:
-# import os
-# BOTO3_IP = os.environ["BOTO3_IP"] # boto3 bucket endpoint
-# SAVE_CKPT_FOLDER = f"boto3:s3://model_weights.{BOTO3_IP}/internlm"
-# LOAD_CKPT_FOLDER = f"boto3:s3://model_weights.{BOTO3_IP}/internlm/snapshot/1/"
 CHECKPOINT_EVERY = 50
 ckpt = dict(
     enable_save_ckpt=False,  # enable ckpt save.
@@ -33,7 +31,7 @@ ckpt = dict(
     # path specified in `load_ckpt_info` by default.
     # If you want to initialize your model weights from another model, you must set `auto_resume` to False.
     # If you want to train from scratch, please set `auto_resume` to False and 'load_ckpt_info' to None.
-    load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model"), ckpt_type="internevo"),
+    # load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model"), ckpt_type="internevo"),
     auto_resume=False,
     checkpoint_every=CHECKPOINT_EVERY,
     async_upload=True,  # async ckpt upload. (only work for boto3 ckpt)
@@ -41,11 +39,11 @@ ckpt = dict(
     oss_snapshot_freq=int(CHECKPOINT_EVERY / 2),  # snapshot ckpt save frequency.
 )
 
-sync_step = 10
 
-TRAIN_FOLDER = None
+TRAIN_FOLDER = "/data/datasets/TinyStories"
 VALID_FOLDER = None  # "/path/to/dataset"
 data = dict(
+    tokenizer_path="/data/deeplink_yidian/tokenizer/hf-internlm2-tokenizer",
     seq_len=SEQ_LEN,
     # micro_num means the number of micro_batch contained in one gradient update
     micro_num=4,
@@ -56,7 +54,7 @@ data = dict(
     # defaults to 0, means disable evaluate
     valid_every=0,
     pack_sample_into_one=False,
-    total_steps=20000,
+    total_steps=500,
     skip_batches="",
     # rampup_batch_size (str): A string with three space-separated integers representing the
     #       starting batch size, the increment, and the number of steps between
@@ -158,7 +156,7 @@ model = dict(
     norm_type="rmsnorm",
     layer_norm_epsilon=1e-5,
     num_kv_attention_heads=NUM_KV_ATTENTION_HEAD,
-    use_flash_attn=False,
+    use_flash_attn=True,
     # Whether the odd and even columns of the query and key in the model are normally interleaved.
     # If it's True, the model's odd and even columns are normally ordered; if it's False,
     # it means that the model has prematurely concatenated all odd columns and even columns in front

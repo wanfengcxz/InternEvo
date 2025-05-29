@@ -1,3 +1,5 @@
+import os
+
 JOB_NAME = "7b_qwen2_train"
 model_type = "QWEN2"
 DO_ALERT = False
@@ -16,12 +18,7 @@ MODEL_ONLY_FOLDER = "local:llm_ckpts_qwen2/xxxx/"
 # fs: 'local:/mnt/nfs/XXX'
 SAVE_CKPT_FOLDER = "local:./ckpt_qwen2_7B"
 
-sync_step = 3
-
-# boto3 Ckpt folder format:
-# import os
-# BOTO3_IP = os.environ["BOTO3_IP"] # boto3 bucket endpoint
-# SAVE_CKPT_FOLDER = f"boto3:s3://model_weights.{BOTO3_IP}/internlm"
+sync_step = 16
 CHECKPOINT_EVERY = 50
 ckpt = dict(
     enable_save_ckpt=False,  # enable ckpt save.
@@ -32,7 +29,7 @@ ckpt = dict(
     # 2. the 'content‘ means what states will be loaded, support: "model", "sampler", "optimizer", "scheduler", "all"
     # 3. the ’ckpt_type‘ means the type of checkpoint to be loaded, support: "internevo", "hf", or other custom-defined
     # load function such as "llama"
-    load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model",), ckpt_type="internevo"),
+    # load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model",), ckpt_type="internevo"),
     # 'auto_resume' is designed to automatically load the latest checkpoint from 'save_ckpt_folder' when encountering
     # training interruptions/hangs caused by hardware failures, using a scheduling system (such as k8s/slurm)
     # with an automatic restart mechanism upon training reboot.
@@ -47,14 +44,11 @@ ckpt = dict(
     oss_snapshot_freq=int(CHECKPOINT_EVERY / 2),  # snapshot ckpt save frequency.
 )
 
-TRAIN_FOLDER = "/data/RedPajama-Data-1T-Sample-processed"
 TRAIN_FOLDER = "/data/datasets/TinyStories"
-TRAIN_FOLDER = None
 VALID_FOLDER = None  # "/path/to/dataset"
 data = dict(
-    see=456,
     # type="streaming",
-    # tokenizer_path="/data/InternEvo-psserver/configs/hf-qwen2-tokenizer",
+    tokenizer_path="/data/deeplink_yidian/tokenizer/hf-qwen2-tokenizer",
     seq_len=SEQ_LEN,
     # micro_num means the number of micro_batch contained in one gradient update
     micro_num=16,
@@ -64,7 +58,7 @@ data = dict(
     valid_micro_num=4,
     # defaults to 0, means disable evaluate valid_every=0,
     pack_sample_into_one=False,
-    total_steps=10,
+    total_steps=500,
     skip_batches="",
     # rampup_batch_size (str): A string with three space-separated integers representing the
     #       starting batch size, the increment, and the number of steps between
@@ -155,7 +149,7 @@ model = dict(
     dtype="torch.bfloat16",
     norm_type="rmsnorm",
     layer_norm_epsilon=1e-6,
-    use_flash_attn=False,
+    use_flash_attn=True,
     # Whether the odd and even columns of the query and key in the model are normally interleaved.
     # If it's True, the model's odd and even columns are normally ordered; if it's False,
     # it means that the model has prematurely concatenated all odd columns and even columns in front
@@ -196,7 +190,7 @@ weight parallel (dict):
 parallel = dict(
     zero1=dict(size=-1),
     tensor=dict(size=2, mode="mtp"),
-    pipeline=dict(size=3, interleaved_overlap=True),
+    pipeline=dict(size=2, interleaved_overlap=True),
     weight=dict(size=1, overlap=True),
 )
 

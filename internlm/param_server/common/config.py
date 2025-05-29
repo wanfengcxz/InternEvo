@@ -1,19 +1,24 @@
-import random
-
-import torch
-
 import os
-
+import random
+import torch
 
 random.seed(0)
 
+ip_str = os.getenv("PS_SERVERS")
+if ip_str is None:
+    print(f"error, environment variable PS_SERVERS not set!")
+    sys.exit(1)
+ip_list = ps_servers.split(',')
+ps_servers = {i: ip for i, ip in enumerate(ip_list)}
 
-ps_servers = {
-    0: "10.10.41.41",
-}
+MASTER_ADDR = os.getenv("PS_SERVER_MASTER_ADDR")
+if MASTER_ADDR is None:
+    print(f"error, environment variable MASTER_ADDR not set!")
+    sys.exit(1)
+
 NUM_PS = len(ps_servers)
 
-MASTER_ADDR = "10.10.41.41"
+# MASTER_ADDR = "10.10.41.41"
 MASTER_PORT = 55500
 ZMQ_PORT = 55503
 GRPC_PORT = 55504
@@ -42,9 +47,33 @@ grpc_servers = {ps_id: f"{server}:{GRPC_PORT}" for ps_id, server in ps_servers.i
 zmq_servers = {ps_id: f"tcp://{server}:{ZMQ_PORT}" for ps_id, server in ps_servers.items()}
 
 
-model_type = os.environ.get("MODEL_TYPE", None)
-MODEL_TYPE_LIST = ["INTERNLM_2_7B", "QWEN_2_7B", "LLAMA_2_7B", "QWEN_3_30B"]
+model_type = os.getenv("MODEL_TYPE")
+if model_type is None:
+    print(f"error, environment variable MODEL_TYPE not set!")
+    sys.exit(1)
+    
+MODEL_TYPE_LIST = ["INTERNLM_2_7B", "QWEN_2_7B", "LLAMA_2_7B"]
+assert model_type in MODEL_TYPE_LIST "error, model don't support!"
 MODEL_PARAM_DICT = dict()
+
+MODEL_PARAM_DICT["LLAMA_2_7B"] = dict()
+MODEL_PARAM_DICT["LLAMA_2_7B"]["NUM_LAYERS"] = 32
+MODEL_PARAM_DICT["LLAMA_2_7B"]["MLP_RATIO"] = 2.6875
+MODEL_PARAM_DICT["LLAMA_2_7B"]["HIDDEN_SIZE"] = 4096
+MODEL_PARAM_DICT["LLAMA_2_7B"]["NUM_ATTENTION_HEAD"] = 32
+MODEL_PARAM_DICT["LLAMA_2_7B"]["NUM_KV_ATTENTION_HEAD"] = 32
+MODEL_PARAM_DICT["LLAMA_2_7B"]["VOCAB_SIZE"] = 32000
+MODEL_PARAM_DICT["LLAMA_2_7B"]["HEAD_DIM"] = 128
+
+MODEL_PARAM_DICT["QWEN_2_7B"] = dict()
+MODEL_PARAM_DICT["QWEN_2_7B"]["NUM_LAYERS"] = 28
+MODEL_PARAM_DICT["QWEN_2_7B"]["MLP_RATIO"] = 5.25
+MODEL_PARAM_DICT["QWEN_2_7B"]["HIDDEN_SIZE"] = 3584
+MODEL_PARAM_DICT["QWEN_2_7B"]["NUM_ATTENTION_HEAD"] = 28
+MODEL_PARAM_DICT["QWEN_2_7B"]["NUM_KV_ATTENTION_HEAD"] = 4
+MODEL_PARAM_DICT["QWEN_2_7B"]["VOCAB_SIZE"] = 152064
+MODEL_PARAM_DICT["QWEN_2_7B"]["HEAD_DIM"] = 128
+
 MODEL_PARAM_DICT["INTERNLM_2_7B"] = dict()
 MODEL_PARAM_DICT["INTERNLM_2_7B"]["NUM_LAYERS"] = 32
 MODEL_PARAM_DICT["INTERNLM_2_7B"]["MLP_RATIO"] = 3.5
@@ -54,21 +83,6 @@ MODEL_PARAM_DICT["INTERNLM_2_7B"]["NUM_KV_ATTENTION_HEAD"] = 8
 MODEL_PARAM_DICT["INTERNLM_2_7B"]["VOCAB_SIZE"] = 92544
 MODEL_PARAM_DICT["INTERNLM_2_7B"]["HEAD_DIM"] = 128
 
-
-MODEL_PARAM_DICT = dict()
-MODEL_PARAM_DICT["QWEN_3_30B"] = dict()
-MODEL_PARAM_DICT["QWEN_3_30B"]["NUM_LAYERS"] = 48
-MODEL_PARAM_DICT["QWEN_3_30B"]["MLP_RATIO"] = 768 / 2048
-MODEL_PARAM_DICT["QWEN_3_30B"]["HIDDEN_SIZE"] = 2048
-MODEL_PARAM_DICT["QWEN_3_30B"]["NUM_ATTENTION_HEAD"] = 32
-MODEL_PARAM_DICT["QWEN_3_30B"]["NUM_KV_ATTENTION_HEAD"] = 4
-MODEL_PARAM_DICT["QWEN_3_30B"]["VOCAB_SIZE"] = 151936
-MODEL_PARAM_DICT["QWEN_3_30B"]["HEAD_DIM"] = 128
-
-
-if model_type not in MODEL_TYPE_LIST:
-    model_type = "INTERNLM_2_7B"
-model_type = "QWEN_3_30B"
 NUM_LAYERS = MODEL_PARAM_DICT[model_type]["NUM_LAYERS"]
 MLP_RATIO = MODEL_PARAM_DICT[model_type]["MLP_RATIO"]
 HIDDEN_SIZE = MODEL_PARAM_DICT[model_type]["HIDDEN_SIZE"]
@@ -172,13 +186,21 @@ def get_param_shapes(config):
 
     return param_shapes
 
+CHECKPOINT_FOLDER = os.getenv("CHECKPOINT_FOLDER")
+if CHECKPOINT_FOLDER is None:
+    print(f"error, environment variable CHECKPOINT_FOLDER not set!")
+    sys.exit(1)
+
+ckpt_dict = {
+    "INTERNLM_2_7B": "/data/deeplink_yidian/init_weight/ckpt_internlm2_7B_convert/model_tp0_pp0.pt",
+    "QWEN_2_7B": "/data/deeplink_yidian/init_weight/ckpt_qwen2_7B_convert/model_tp0_pp0.pt", 
+    "LLAMA_2_7B": "/data/deeplink_yidian/init_weight/ckpt_llama2_7B_convert/model_tp0_pp0.pt",
+}
 
 ckpt = dict(
     auto_resume=False,
-    # load_ckpt_path="/data/InternEvo-psserver/20B_ckpt/internlm2/1_merged/model_tp0_pp0.pt",
-    # load_ckpt_path="/datapool/caikun/ckpt/internlm2_7b_ckpt/model_tp0_pp0.pt",
-    load_ckpt_path="/datapool/caikun/ckpt/qwen3_30b_a3b/model_wp0_pp0.pt",
-    save_ckpt_path="./ps_ckpt",
+    load_ckpt_path=ckpt_dict[model_type],
+    save_ckpt_path=CHECKPOINT_FOLDER,
 )
 layer_chunks = get_chunks(NUM_LAYERS, NUM_PS)
 param_shapes = get_param_shapes(model)

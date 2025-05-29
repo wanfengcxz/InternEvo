@@ -325,7 +325,7 @@ def args_sanity_check():
         gpc.config._add_item("enable_tb", True)
     if "tensorboard_folder" not in gpc.config:
         gpc.config._add_item(
-            "tensorboard_folder", os.environ["tensorboard_folder"] if "tensorboard_folder" in os.environ else None
+            "tensorboard_folder", os.environ["TENSORBOARD_FOLDER"] if "tensorboard_folder" in os.environ else None
         )
     if "resume_tb_folder" not in gpc.config:
         gpc.config._add_item(
