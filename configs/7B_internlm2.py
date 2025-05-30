@@ -31,7 +31,7 @@ ckpt = dict(
     # path specified in `load_ckpt_info` by default.
     # If you want to initialize your model weights from another model, you must set `auto_resume` to False.
     # If you want to train from scratch, please set `auto_resume` to False and 'load_ckpt_info' to None.
-    # load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model"), ckpt_type="internevo"),
+    load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model"), ckpt_type="internevo"),
     auto_resume=False,
     checkpoint_every=CHECKPOINT_EVERY,
     async_upload=True,  # async ckpt upload. (only work for boto3 ckpt)
@@ -43,6 +43,7 @@ ckpt = dict(
 TRAIN_FOLDER = "/data/datasets/TinyStories"
 VALID_FOLDER = None  # "/path/to/dataset"
 data = dict(
+    type="streaming",
     tokenizer_path="/data/deeplink_yidian/tokenizer/hf-internlm2-tokenizer",
     seq_len=SEQ_LEN,
     # micro_num means the number of micro_batch contained in one gradient update

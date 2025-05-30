@@ -29,7 +29,7 @@ ckpt = dict(
     # 2. the 'content‘ means what states will be loaded, support: "model", "sampler", "optimizer", "scheduler", "all"
     # 3. the ’ckpt_type‘ means the type of checkpoint to be loaded, support: "internevo", "hf", or other custom-defined
     # load function such as "llama"
-    # load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model",), ckpt_type="internevo"),
+    load_ckpt_info=dict(path=MODEL_ONLY_FOLDER, content=("model",), ckpt_type="internevo"),
     # 'auto_resume' is designed to automatically load the latest checkpoint from 'save_ckpt_folder' when encountering
     # training interruptions/hangs caused by hardware failures, using a scheduling system (such as k8s/slurm)
     # with an automatic restart mechanism upon training reboot.
@@ -47,7 +47,7 @@ ckpt = dict(
 TRAIN_FOLDER = "/data/datasets/TinyStories"
 VALID_FOLDER = None  # "/path/to/dataset"
 data = dict(
-    # type="streaming",
+    type="streaming",
     tokenizer_path="/data/deeplink_yidian/tokenizer/hf-qwen2-tokenizer",
     seq_len=SEQ_LEN,
     # micro_num means the number of micro_batch contained in one gradient update

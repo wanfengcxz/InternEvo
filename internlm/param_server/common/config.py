@@ -8,7 +8,7 @@ ip_str = os.getenv("PS_SERVERS")
 if ip_str is None:
     print(f"error, environment variable PS_SERVERS not set!")
     sys.exit(1)
-ip_list = ps_servers.split(',')
+ip_list = ip_str.split(',')
 ps_servers = {i: ip for i, ip in enumerate(ip_list)}
 
 MASTER_ADDR = os.getenv("PS_SERVER_MASTER_ADDR")
