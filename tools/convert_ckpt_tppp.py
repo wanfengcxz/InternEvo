@@ -76,6 +76,7 @@ def parse_args():
     args.add_argument("--target_tp_size", type=int, default=0)
     args.add_argument("--target_pp_size", type=int, default=0)
     args.add_argument("--model_size", type=str, default="7B", choices=["7B", "20B", "70B"])
+    args.add_argument("--use_qwen", action='store_true', help="Whether to use Qwen model.")
     return args.parse_args()
 
 
@@ -278,6 +279,7 @@ def convert_pp_size(folder, saved_folder, target_pp_size, model_size):
 if __name__ == "__main__":
 
     args = parse_args()
+    using_qwen = args.use_qwen
 
     if "http_proxy" in os.environ:
         del os.environ["http_proxy"]
